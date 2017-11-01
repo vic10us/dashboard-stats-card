@@ -1,0 +1,338 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../granite-c3/granite-c3-polymer.1.x.html">
+
+<dom-module id="dashboard-stats-card">
+    <template>
+        <style>
+            :host {
+                display: grid;
+                grid-template-rows: 1fr auto;
+                font-size: var(--stats-card-font-size, 13px);
+                -webkit-box-shadow: 1px 1px 1px 0 rgba(0,0,0,.07), 1px 2px 5px 0 rgba(0,0,0,.06);
+                box-shadow: 1px 1px 1px 0 rgba(0,0,0,.07), 1px 2px 5px 0 rgba(0,0,0,.06);
+                letter-spacing: .1px;
+                --stats-card-background-color-0: var(--stat-card-background-color, #42A5F5);
+                --stats-card-chart-height-0: var(--stats-card-chart-height, 60px);
+                cursor: default;
+            }
+            .h4, h4 {
+                font-size: var(--stats-card-title-font-size, 17px);
+            }
+            .body {
+                background-color: var(--stats-card-background-color-0);
+                color: #fff;
+                padding: 10px;
+            }
+            .no-margin {
+                margin: 0 !important;
+            }
+            .w300 {
+                font-weight: 300;
+            }
+            .w600 {
+                font-weight: 600;
+            }
+            .white-text {
+                color: #FFF;
+            }
+            .f11 {
+                font-size: 11px;
+                line-height: 1;
+            }
+            .f11 span {
+                vertical-align: middle;
+            }
+            .f11 iron-icon {
+                --iron-icon-width: 13px;
+                --iron-icon-height: 13px;
+                width: 13px;
+                height: 13px;
+            }
+            .page-header .actions, .pull-right {
+                float: right !important;
+            }
+            .trending {
+                --iron-icon-width: 14px;
+                --iron-icon-height: 14px;
+                width: 14px;
+                height: 14px;
+            }
+            .card-content {
+                background-color: #fff;
+                color: #666;
+                padding: 15px;
+                box-sizing: border-box;
+            }
+            .row {
+                margin-left: -15px;
+                margin-right: -15px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .text-center {
+                text-align: center;
+            }
+            .grey-text, .page-header h1 i {
+                color: #9e9e9e;
+            }
+            .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+                font-family: inherit;
+                font-weight: 400;
+                line-height: 1.1;
+                color: #444;
+            }
+            .h3, h3 {
+                font-size: var(--stats-card-stat-value-font-size, 23px);
+            }
+            :host .card-content p {
+                margin: 0;
+            }
+            .col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+                position: relative;
+                min-height: 1px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            .p-10 {
+                padding: 10px;
+            }
+            .p-t-30 {
+                padding-top: 30px;
+            }
+
+            .chart {
+                background-color: var(--stats-card-background-color-0);
+                position: relative;
+                height: var(--stats-card-chart-height-0);
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .chart-container {
+                position: absolute;
+                margin: 0px -5px -8px -5px;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+            .ontop {
+                z-index: 1000;
+            }
+            .tooltip-container {
+                background-color: #fff;
+            }
+        </style>
+        <!-- 
+            icons:trending-up
+            icons:trending-flat
+            icons:trending-down
+            icons:star-border
+        -->
+        <div class="body">
+            <template is="dom-if" if="[[_hasTrend(trend)]]">
+                <div id="trend" class="pull-right"><iron-icon class="trending" icon="[[_trendIcon]]"></iron-icon>[[trend]]%</div>
+                <paper-tooltip for="trend" offset="0" position="left">[[trendtip]]</paper-tooltip>
+            </template>
+            <div><h4 class="no-margin w600 white-text">[[title]]</h4></div>
+            <template is="dom-if" if="[[_hasSubtitle(subtitle)]]">
+            <div class="f11" style="opacity: 0.8;">
+                <iron-icon icon="icons:star-border"></iron-icon>
+                <span>[[subtitle]]</span>
+            </div>
+            </template>
+        </div>
+        <div hidden$="[[hideChart]]" class="chart">
+            <div class="chart-container">
+                <granite-c3 id="graph" data="[[gridData]]" axis="[[gridAxis]]" legend="[[gridLegend]]" tooltip="[[tooltip]]"></granite-c3>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="row" style$="[[_statRowStyle]]">
+                <template is="dom-repeat" items="[[stats]]">
+                    <div class="col-md-6 text-center" style$="[[_getItemStyle(index)]]">
+                        <h3 class="no-margin w300">[[item.value]]</h3>
+                        <p class="grey-text w600">[[item.title]]</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        var dummy = {
+            data: {
+                x: 'x',
+                columns: [
+                ],
+                types: {
+                    sales: 'area'
+                },
+                colors: {
+                    sales: 'rgba(255,255,255,0.5)'
+                }
+            },
+            axis: {
+                x: {
+                    type: 'timeseries',
+                    tick: {
+                        format: '%Y-%m-%d'
+                    },
+                    show: false
+                },
+                y: {
+                    show: false
+                }
+            },
+            legend: {
+                show: false
+            },
+            tooltip: {
+                grouped: true,
+                contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
+                    var dn = d[0].name;
+                    var dv = d[0].value;
+                    if (`${dv}` === '1') {
+                        dn = dn.replace(new RegExp("[s]+$"), "");
+                    }
+                    if (dn == 'revenue' || dn == 'cost') {
+                        dv = dv.toFixed(2);;
+                        if (dv == 0) {
+                            dv = 'no';
+                        } else {
+                            dv = `$${dv}`;
+                        }
+                    }
+                    var style = 'color: #424242; background-color: rgba(255,255,255,0.8); border: 1px solid #fff; border-radius: 4px; padding: 4px; potition: absolute; z-index: 1000;';
+                    return `<div id="tooltip" style="${style}">${dv} ${dn}</div>`;
+                }
+            },
+            stats: [
+            ]
+        };
+
+        Polymer({
+            is: 'dashboard-stats-card',
+            properties: {
+                verbose: {
+                    type: Boolean,
+                    value: false
+                },
+                hideChart: {
+                    type: Boolean,
+                    value: false
+                },
+                title: {
+                    type: String,
+                    value: ''
+                },
+                subtitle: {
+                    type: String,
+                    value: ''
+                },
+                trend: {
+                    type: Number,
+                    value: undefined
+                },
+                trendtip: {
+                    type: String
+                },
+                _trendIcon: {
+                    type: String,
+                    computed: '_getTrendIcon(trend)'
+                },
+                gridData: {
+                    type: Object,
+                    notify: true,
+                    value: function() {
+                        return dummy.data;
+                    }
+                },
+                gridAxis: {
+                    type: Object,
+                    value: function() {
+                        return dummy.axis;
+                    }
+                },
+                gridLegend: {
+                    type: Object,
+                    value: function() {
+                        return dummy.legend;
+                    }
+                },
+                tooltip: {
+                    type: Object,
+                    value: function() {
+                        return dummy.tooltip;
+                    }
+                },
+                stats: {
+                    type: Array,
+                    value: function() {
+                        return dummy.stats;
+                    }
+                },
+                _statRowStyle: {
+                    type: String,
+                    computed: '_getStatRowStyle(stats)'
+                }
+            },
+            _log: function (msg) {
+                if (this.verbose)
+                    console.log(msg);
+            },
+            observers: [
+              '_onDataOrStatsChanged(gridData, stats)'
+            ],
+            ready: function () {
+                this._log('address-form ready');
+            },
+            attached: function () {
+                this._log('address-form attached');
+            },
+            detached: function () {
+                this._log('address-form detached');
+            },
+            refreshGrid: function() {
+              this.$.graph.chart.destroy();
+              this.$.graph.attached();
+              setTimeout(function() {
+                this.$.graph.chart.resize();
+              }.bind(this), 250);
+              //this.$.graph._reload();
+            },
+            _getItemStyle: function(index) {
+                return index < this.stats.length-1 ? 'border-right: 1px #F0F0F0 solid;': '';
+            },
+            _getStatRowStyle: function(stats) {
+                return `grid-template-columns: repeat(${stats.length}, 1fr);`;
+            },
+            _getTrendIcon: function(trend) {
+                /*
+                icons:trending-up
+                icons:trending-flat
+                icons:trending-down
+                icons:star-border
+                */
+                if (!trend || trend === 0) return 'trending-flat';
+                if (trend > 0) return 'trending-up';
+                if (trend < 0) return 'trending-down';
+                return 'trending-flat';
+            },
+            _hasTrend: function(trend) {
+                return (trend !== undefined);
+            },
+            _hasSubtitle: function(subtitile) {
+                return (subtitile !== undefined && subtitile !== null);
+            },
+            _onDataOrStatsChanged: function(data,stats) {
+              this.refreshGrid();
+            }
+        });
+    </script>
+
+</dom-module>
