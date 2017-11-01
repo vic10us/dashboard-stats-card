@@ -47,14 +47,11 @@
       </demo-snippet>
       <script>
         window.addEventListener('WebComponentsReady', function() {
-          // show body now that everything is ready
           var card = document.querySelector('#statcard1');
           card.gridData = window.data;
           card.stats = window.stats;
           window.card = card;
         });
-        /* var e = document.querySelector("#statcard1");
-        e.gridData = data; */
       </script>
     </div>
   </body>
