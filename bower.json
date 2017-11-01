@@ -15,6 +15,8 @@
     "dashboard"
   ],
   "main": "dashboard-stats-card.html",
+  "license": "http://polymer.github.io/LICENSE.txt",
+  "homepage": "https://github.com/vic10us/paper-search-input/",
   "dependencies": {
     "polymer": "Polymer/polymer#1.9 - 2",
     "iron-icon": "PolymerElements/iron-icon#1 - 2",
